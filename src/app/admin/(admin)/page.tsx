@@ -1,3 +1,5 @@
+
+
 import type { Metadata } from "next";
 import React from "react";
 
@@ -11,6 +13,8 @@ import AgentPerformance from "@/components/donation/AgentPerformance";
 import BarChart from "@/components/donation/BarChart";
 import PieChart from "@/components/donation/PieChart";
 import LineChart from "@/components/donation/LineChart";
+import {getServerSession} from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
 
 export const metadata: Metadata = {
@@ -18,9 +22,12 @@ export const metadata: Metadata = {
   description: "Dashboard for managing donations, campaigns, and volunteer activities.",
 };
 
-export default function DonationDashboard() {
+export default async function DonationDashboard() {
+  const session=await getServerSession(authOptions);
+
+  const adminName=session.user.name  
   // Mock Admin Name (Replace with actual dynamic data)
-  const adminName = "Salman";
+  
 
   return (
     
