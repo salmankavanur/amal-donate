@@ -88,6 +88,37 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 text-gray-900">
+
+{/* test section */}
+ {/* Banner Section */}
+ {/* <section className="relative mb-12 rounded-lg overflow-hidden shadow-lg">
+        <div className="absolute inset-0">
+          <Image 
+            src="/images/banner.jpg" 
+            alt="AIC Alumni Donation Banner" 
+            fill 
+            className="object-cover" 
+            priority
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-900/80 to-transparent"></div>
+        </div>
+        <div className="relative z-10 p-8 md:p-12 lg:p-16">
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4">
+            Support The Future<br />Through AIC Alumni
+          </h1>
+          <p className="text-lg md:text-xl text-white mb-8 max-w-2xl">
+            Your contributions help build a stronger college community and support the next generation of leaders.
+          </p>
+          <div className="flex flex-wrap gap-4">
+            <Link href="/donate" className="bg-white text-blue-900 px-6 py-3 rounded-lg font-semibold text-lg hover:bg-blue-50 transition">
+              Donate Now
+            </Link>
+            <Link href="/about" className="bg-transparent border-2 border-white text-white px-6 py-3 rounded-lg font-semibold text-lg hover:bg-white/10 transition">
+              Learn More
+            </Link>
+          </div>
+        </div>
+      </section> */}
       {/* Hero Section */}
       <section className="relative h-[80vh] flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 z-0">
