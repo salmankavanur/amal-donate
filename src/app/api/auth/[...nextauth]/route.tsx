@@ -40,6 +40,8 @@ export const authOptions: NextAuthOptions = {
         const isValid = await bcrypt.compare(credentials.password, user.password);
         if (!isValid) throw new Error("Invalid password");
 
+        console.log("User authenticated:", user.email);
+
         return { 
           id: user._id.toString(), 
           email: user.email, 

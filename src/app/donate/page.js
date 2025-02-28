@@ -2,12 +2,16 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Loading from "../../components/loading/Loading"
 
 export default function DonateForm({ session }) {
-  const router = useRouter(); // Initialize router
-  const [amount, setAmount] = useState("");
+  const router = useRouter(); 
+
+  const searchParams = useSearchParams();
+  const initialAmount = searchParams.get("amount") || ""; // Get amount from URL
+
+  const [amount, setAmount] = useState(initialAmount);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [type, setType] = useState("General");
@@ -116,6 +120,11 @@ export default function DonateForm({ session }) {
       <form onSubmit={handleDonate} className="space-y-6">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Donation Amount (₹)</label>
+          {
+            initialAmount ?
+
+            <h1 className="text-2xl text-green-600 font-extrabold" >₹ {amount}</h1> :
+
           <input
             type="number"
             value={amount}
@@ -124,6 +133,7 @@ export default function DonateForm({ session }) {
             className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
             required
           />
+          }
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>

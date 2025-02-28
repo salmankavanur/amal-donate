@@ -6,10 +6,60 @@ import Button from "@/components/ui/button/Button";
 import { ChevronLeftIcon, EyeCloseIcon, EyeIcon } from "@/icons";
 import Link from "next/link";
 import React, { useState } from "react";
+import { signIn, getSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 export default function SignInForm() {
-  const [showPassword, setShowPassword] = useState(false);
-  const [isChecked, setIsChecked] = useState(false);
+  const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [isChecked, setIsChecked] = useState<boolean>(false);
+  const [email, setEmail] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
+  const router = useRouter();
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+
+    const result = await signIn("credentials", {
+      redirect: false,
+      email,
+      password,
+    });
+
+    if (result?.error) {
+      console.log("SignIn error:", result.error);
+      setLoading(false);
+      let errorMessage = "An error occurred during sign-in";
+      switch (result.error) {
+        case "Missing credentials":
+          errorMessage = "Please enter both email and password";
+          break;
+        case "No account found with this email":
+          errorMessage = "No account exists with this email";
+          break;
+        case "Invalid password":
+          errorMessage = "Incorrect password";
+          break;
+      }
+      setError(errorMessage);
+      return;
+    }
+
+    const session = await getSession();
+
+    if (!session || !session.user) {
+      setError("No session found");
+      setLoading(false);
+      return;
+    }
+
+    console.log("User:", session.user);
+    router.push("/admin");
+  };
+
   return (
     <div className="flex flex-col flex-1 lg:w-1/2 w-full">
       <div className="w-full max-w-md sm:pt-10 mx-auto mb-5">
@@ -84,13 +134,14 @@ export default function SignInForm() {
                 </span>
               </div>
             </div>
-            <form>
+            <form onSubmit={handleSubmit}>
               <div className="space-y-6">
                 <div>
                   <Label>
                     Email <span className="text-error-500">*</span>{" "}
                   </Label>
-                  <Input placeholder="info@gmail.com" type="email" />
+                  <Input onChange={(e)=>{setEmail(e.target.value)}} placeholder="info@gmail.com" type="email" 
+                   disabled={loading}  />
                 </div>
                 <div>
                   <Label>
@@ -98,8 +149,10 @@ export default function SignInForm() {
                   </Label>
                   <div className="relative">
                     <Input
+                       onChange={(e)=>{setPassword(e.target.value)}}
                       type={showPassword ? "text" : "password"}
                       placeholder="Enter your password"
+                      disabled={loading}
                     />
                     <span
                       onClick={() => setShowPassword(!showPassword)}
@@ -128,8 +181,10 @@ export default function SignInForm() {
                   </Link>
                 </div>
                 <div>
-                  <Button className="w-full" size="sm">
-                    Sign in
+                  <Button  className="w-full" size="sm"
+                  disabled={loading}
+                  >
+                  {loading ? "Signing In..." : "Sign In"}
                   </Button>
                 </div>
               </div>
@@ -149,6 +204,7 @@ export default function SignInForm() {
           </div>
         </div>
       </div>
+     
     </div>
   );
 }

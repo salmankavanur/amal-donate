@@ -3,8 +3,11 @@
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
+
+  
   // Sample data for campaigns
   const campaigns = [
     {
@@ -86,6 +89,16 @@ export default function Home() {
   // Predefined donation amounts
   const donationAmounts = [10, 300, 1000];
 
+  const router = useRouter();
+
+  const handleDonateClick = (amount) => {
+    router.push(`/donate?amount=${amount}`);
+  };
+
+  const handleDonateCustom=()=>{
+    router.push('/donate')
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 text-gray-900">
 
@@ -160,14 +173,16 @@ export default function Home() {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               className="bg-gradient-to-br from-indigo-600 to-indigo-800 text-white text-xl font-bold px-10 py-5 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 min-w-[200px]"
+              onClick={() => handleDonateClick(amount)}
             >
-              ${amount}
+              ₹ {amount}
             </motion.button>
           ))}
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             className="bg-transparent border-2 border-indigo-600 text-indigo-600 text-xl font-bold px-10 py-5 rounded-xl hover:bg-indigo-50 transition-all duration-300 min-w-[200px]"
+            onClick={()=>handleDonateCustom()}
           >
             Custom Gift
           </motion.button>
@@ -207,7 +222,7 @@ export default function Home() {
                       ></motion.div>
                     </div>
                     <div className="flex justify-between text-sm text-gray-500">
-                      <span>${campaign.raised.toLocaleString()} raised</span>
+                      <span>₹{campaign.raised.toLocaleString()} raised</span>
                       <span>Goal: ${campaign.goal.toLocaleString()}</span>
                     </div>
                   </div>
