@@ -1,45 +1,55 @@
+// src/app/page.js
 "use client";
 
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import Loading from "../components/loading/Loading"; 
 
 export default function Home() {
+  const [campaigns, setCampaigns] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const router = useRouter();
 
-  
-  // Sample data for campaigns
-  const campaigns = [
-    {
-      id: 1,
-      title: "Zam Zam Water Campaign",
-      description: "Help provide clean water facilities for students and faculty.",
-      image: "/images/cards/ramzan.jpg",
-      endDate: "March 30, 2025",
-      goal: 15000,
-      raised: 8750,
-    },
-    {
-      id: 2,
-      title: "Library Expansion",
-      description: "Support our efforts to expand the college library with new books and digital resources.",
-      image: "/images/cards/card-01.jpg",
-      endDate: "April 15, 2025",
-      goal: 25000,
-      raised: 12300,
-    },
-    {
-      id: 3,
-      title: "Scholarship Fund",
-      description: "Help deserving students achieve their academic goals through scholarships.",
-      image: "/images/cards/card-02.jpg",
-      endDate: "May 1, 2025",
-      goal: 50000,
-      raised: 27500,
-    },
-  ];
+  // Fetch published campaigns on mount
+  useEffect(() => {
+    const fetchCampaigns = async () => {
+      try {
+        const response = await fetch('/api/campaigns/published');
+        const data = await response.json();
 
-  // Sample data for sponsorship options
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to fetch campaigns');
+        }
+
+        setCampaigns(data);
+       
+      } catch (err) {
+        console.error('Error fetching campaigns:', err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCampaigns();
+  }, []);
+
+  // Predefined donation amounts
+  const donationAmounts = [10, 300, 1000];
+
+  const handleDonateClick = (amount) => {
+    router.push(`/donate?amount=${amount}`);
+  };
+
+  const handleDonateCustom = () => {
+    router.push('/donate');
+  };
+
+  // Sample data for sponsorship options (unchanged)
   const sponsorshipOptions = [
     {
       id: 1,
@@ -64,7 +74,7 @@ export default function Home() {
     },
   ];
 
-  // Sample data for institution branches
+  // Sample data for institution branches (unchanged)
   const institutions = [
     {
       id: 1,
@@ -86,52 +96,8 @@ export default function Home() {
     },
   ];
 
-  // Predefined donation amounts
-  const donationAmounts = [10, 300, 1000];
-
-  const router = useRouter();
-
-  const handleDonateClick = (amount) => {
-    router.push(`/donate?amount=${amount}`);
-  };
-
-  const handleDonateCustom=()=>{
-    router.push('/donate')
-  }
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 text-gray-900">
-
-{/* test section */}
- {/* Banner Section */}
- {/* <section className="relative mb-12 rounded-lg overflow-hidden shadow-lg">
-        <div className="absolute inset-0">
-          <Image 
-            src="/images/banner.jpg" 
-            alt="AIC Alumni Donation Banner" 
-            fill 
-            className="object-cover" 
-            priority
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-900/80 to-transparent"></div>
-        </div>
-        <div className="relative z-10 p-8 md:p-12 lg:p-16">
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4">
-            Support The Future<br />Through AIC Alumni
-          </h1>
-          <p className="text-lg md:text-xl text-white mb-8 max-w-2xl">
-            Your contributions help build a stronger college community and support the next generation of leaders.
-          </p>
-          <div className="flex flex-wrap gap-4">
-            <Link href="/donate" className="bg-white text-blue-900 px-6 py-3 rounded-lg font-semibold text-lg hover:bg-blue-50 transition">
-              Donate Now
-            </Link>
-            <Link href="/about" className="bg-transparent border-2 border-white text-white px-6 py-3 rounded-lg font-semibold text-lg hover:bg-white/10 transition">
-              Learn More
-            </Link>
-          </div>
-        </div>
-      </section> */}
       {/* Hero Section */}
       <section className="relative h-[80vh] flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 z-0">
@@ -182,7 +148,7 @@ export default function Home() {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             className="bg-transparent border-2 border-indigo-600 text-indigo-600 text-xl font-bold px-10 py-5 rounded-xl hover:bg-indigo-50 transition-all duration-300 min-w-[200px]"
-            onClick={()=>handleDonateCustom()}
+            onClick={handleDonateCustom}
           >
             Custom Gift
           </motion.button>
@@ -198,44 +164,58 @@ export default function Home() {
               Explore All Campaigns
             </Link>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {campaigns.map((campaign) => (
-              <motion.div
-                key={campaign.id}
-                whileHover={{ y: -10 }}
-                className="bg-white rounded-2xl shadow-xl overflow-hidden transform transition-all duration-300"
-              >
-                <div className="relative h-56">
-                  <Image src={campaign.image} alt={campaign.title} fill className="object-cover" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-gray-900/50 to-transparent"></div>
-                </div>
-                <div className="p-6">
-                  <h3 className="text-2xl font-bold text-indigo-900 mb-3">{campaign.title}</h3>
-                  <p className="text-gray-600 mb-4">{campaign.description}</p>
-                  <div className="mb-4">
-                    <div className="h-2 bg-gray-200 rounded-full mb-2 overflow-hidden">
-                      <motion.div
-                        initial={{ width: 0 }}
-                        animate={{ width: `${(campaign.raised / campaign.goal) * 100}%` }}
-                        transition={{ duration: 1.5 }}
-                        className="h-2 bg-gradient-to-r from-green-400 to-green-600 rounded-full"
-                      ></motion.div>
+          {loading ? (
+            <div className="flex justify-center">
+              <Loading />
+            </div>
+          ) : error ? (
+            <div className="text-center text-red-600">{error}</div>
+          ) : campaigns.length === 0 ? (
+            <div className="text-center text-gray-600">No active campaigns found.</div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {campaigns.map((campaign) => (
+                <motion.div
+                  key={campaign.id}
+                  whileHover={{ y: -10 }}
+                  className="bg-white rounded-2xl shadow-xl overflow-hidden transform transition-all duration-300"
+                >
+                  <div className="relative h-56">
+                    {campaign.image ? (
+                      <Image src={campaign.image} alt={campaign.title} fill className="object-cover" />
+                    ) : (
+                      <Image src="/images/placeholder.jpg" alt="Placeholder" fill className="object-cover" />
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-gray-900/50 to-transparent"></div>
+                  </div>
+                  <div className="p-6">
+                    <h3 className="text-2xl font-bold text-indigo-900 mb-3">{campaign.title}</h3>
+                    <p className="text-gray-600 mb-4">{campaign.description}</p>
+                    <div className="mb-4">
+                      <div className="h-2 bg-gray-200 rounded-full mb-2 overflow-hidden">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${(campaign.raised / campaign.goal) * 100}%` }}
+                          transition={{ duration: 1.5 }}
+                          className="h-2 bg-gradient-to-r from-green-400 to-green-600 rounded-full"
+                        ></motion.div>
+                      </div>
+                      <div className="flex justify-between text-sm text-gray-500">
+                        <span>₹{campaign.raised.toLocaleString()} raised</span>
+                        <span>Goal: ₹{campaign.goal.toLocaleString()}</span>
+                      </div>
                     </div>
-                    <div className="flex justify-between text-sm text-gray-500">
-                      <span>₹{campaign.raised.toLocaleString()} raised</span>
-                      <span>Goal: ${campaign.goal.toLocaleString()}</span>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-500">Ends: {campaign.endDate}</span>
+                      <Link href={`/campaigns/${campaign.id}`} className="bg-indigo-600 text-white px-5 py-2 rounded-full font-medium hover:bg-indigo-700 transition-colors">
+                        Contribute
+                      </Link>
                     </div>
                   </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-500">Ends: {campaign.endDate}</span>
-                    <Link href={`/campaigns/${campaign.id}`} className="bg-indigo-600 text-white px-5 py-2 rounded-full font-medium hover:bg-indigo-700 transition-colors">
-                      Contribute
-                    </Link>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
+                </motion.div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
@@ -262,7 +242,7 @@ export default function Home() {
                   <h3 className="text-2xl font-bold text-indigo-900 mb-3">{option.title}</h3>
                   <p className="text-gray-600 mb-4">{option.description}</p>
                   <div className="flex justify-between items-center">
-                    <span className="font-semibold text-indigo-700 text-lg">${option.amount.toLocaleString()}</span>
+                    <span className="font-semibold text-indigo-700 text-lg">₹{option.amount.toLocaleString()}</span>
                     <Link href={`/sponsorships/${option.id}`} className="bg-purple-600 text-white px-5 py-2 rounded-full font-medium hover:bg-purple-700 transition-colors">
                       Sponsor Now
                     </Link>

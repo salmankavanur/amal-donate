@@ -1,6 +1,8 @@
 "use client";
 import React, { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import Loading from "../../../../../components/loading/Loading";
 import { 
   ArrowLeft, 
   Calendar, 
@@ -14,7 +16,6 @@ import {
 } from "lucide-react";
 
 export default function CreateCampaignPage() {
-  // Define the form data type
   interface FormData {
     name: string;
     type: string;
@@ -31,7 +32,6 @@ export default function CreateCampaignPage() {
     notes: string;
   }
   
-  // Form state
   const [formData, setFormData] = useState<FormData>({
     name: "",
     type: "",
@@ -52,8 +52,8 @@ export default function CreateCampaignPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [activeSection, setActiveSection] = useState("basic");
+  const router = useRouter();
 
-  // Campaign categories
   const campaignTypes = [
     { value: "", label: "Select a category" },
     { value: "fundraising", label: "Fundraising" },
@@ -64,11 +64,9 @@ export default function CreateCampaignPage() {
     { value: "zakat", label: "Zakat" }
   ];
 
-  // Input change handler
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
     
-    // For checkbox inputs
     if (type === 'checkbox') {
       const checked = (e.target as HTMLInputElement).checked;
       setFormData(prev => ({ ...prev, [name]: checked }));
@@ -77,7 +75,6 @@ export default function CreateCampaignPage() {
     
     setFormData(prev => ({ ...prev, [name]: value }));
     
-    // Clear error for this field if it exists
     if (errors[name]) {
       setErrors(prev => {
         const newErrors = { ...prev };
@@ -87,18 +84,13 @@ export default function CreateCampaignPage() {
     }
   };
 
-  // File upload handler
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      
-      // Create a preview URL
       const objectUrl = URL.createObjectURL(file);
       setPreviewImage(objectUrl);
-      
       setFormData(prev => ({ ...prev, featuredImage: file }));
       
-      // Clear any error for the image field
       if (errors.featuredImage) {
         setErrors(prev => {
           const newErrors = { ...prev };
@@ -107,16 +99,13 @@ export default function CreateCampaignPage() {
         });
       }
       
-      // Clean up the URL when component unmounts
       return () => URL.revokeObjectURL(objectUrl);
     }
   };
 
-  // Validate form
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
     
-    // Required fields
     if (!formData.name.trim()) newErrors.name = "Campaign name is required";
     if (!formData.type) newErrors.type = "Campaign type is required";
     if (!formData.goal.trim()) newErrors.goal = "Fundraising goal is required";
@@ -124,7 +113,6 @@ export default function CreateCampaignPage() {
     if (!formData.startDate) newErrors.startDate = "Start date is required";
     if (!formData.endDate) newErrors.endDate = "End date is required";
     
-    // Check if end date is after start date
     if (formData.startDate && formData.endDate) {
       const start = new Date(formData.startDate);
       const end = new Date(formData.endDate);
@@ -133,24 +121,18 @@ export default function CreateCampaignPage() {
       }
     }
     
-    // Goal should be a valid number
     if (formData.goal && !/^\d+$/.test(formData.goal.replace(/[₹,]/g, ''))) {
       newErrors.goal = "Goal amount must be a valid number";
     }
-    
-    // Image validation (optional for demo)
-    // if (!formData.featuredImage) newErrors.featuredImage = "Campaign image is required";
     
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  // Form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!validateForm()) {
-      // Scroll to the first error
       const firstErrorField = Object.keys(errors)[0];
       const element = document.getElementById(firstErrorField);
       if (element) element.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -160,19 +142,37 @@ export default function CreateCampaignPage() {
     setIsSubmitting(true);
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      const formDataToSend = new FormData();
       
-      // In a real app, you would send the form data to your API
-      console.log("Form submitted:", formData);
-      
-      // Show success message or redirect
+      Object.entries(formData).forEach(([key, value]) => {
+        if (key === 'featuredImage' && value) {
+          formDataToSend.append(key, value);
+        } else {
+          formDataToSend.append(key, value.toString());
+        }
+      });
+
+      const response = await fetch('/api/campaigns/create', {
+        method: 'POST',
+        body: formDataToSend,
+        headers: {
+          // No need for Content-Type with FormData; browser sets it automatically
+        },
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        console.error('API Error Response:', result);
+        throw new Error(result.details || result.error || 'Failed to create campaign');
+      }
+
       alert("Campaign created successfully!");
-      // You can redirect using Next.js router here
+      router.push(`/campaigns/${result.campaignId}`);
       
     } catch (error) {
       console.error("Error creating campaign:", error);
-      alert("Failed to create campaign. Please try again.");
+      alert(`Failed to create campaign: ${error.message}. Please check your network or try again later.`);
     } finally {
       setIsSubmitting(false);
     }
@@ -180,7 +180,6 @@ export default function CreateCampaignPage() {
 
   return (
     <div className="p-4 md:p-6 space-y-6">
-      {/* Header section */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h2 className="text-xl md:text-2xl font-semibold text-gray-800 dark:text-white">
@@ -199,9 +198,7 @@ export default function CreateCampaignPage() {
         </Link>
       </div>
       
-      {/* Form container */}
       <div className="bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 shadow-xl overflow-hidden">
-        {/* Progress Steps */}
         <div className="bg-gradient-to-r from-emerald-500/10 to-blue-500/10 p-4 border-b border-white/10">
           <div className="flex items-center justify-between max-w-3xl mx-auto">
             <button 
@@ -273,9 +270,7 @@ export default function CreateCampaignPage() {
           </div>
         </div>
         
-        {/* Form */}
         <form onSubmit={handleSubmit} className="p-4 md:p-6">
-          {/* Basic Info Section */}
           {activeSection === "basic" && (
             <div className="max-w-3xl mx-auto space-y-6 animate-fadeIn">
               <div className="bg-blue-50 dark:bg-blue-900/10 rounded-lg p-4 text-sm text-blue-800 dark:text-blue-300 flex items-start">
@@ -284,7 +279,6 @@ export default function CreateCampaignPage() {
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Campaign Name */}
                 <div className="col-span-1 md:col-span-2">
                   <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Campaign Name*
@@ -305,7 +299,6 @@ export default function CreateCampaignPage() {
                   )}
                 </div>
                 
-                {/* Campaign Type */}
                 <div>
                   <label htmlFor="type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Category*
@@ -328,7 +321,6 @@ export default function CreateCampaignPage() {
                   )}
                 </div>
                 
-                {/* Fundraising Goal */}
                 <div>
                   <label htmlFor="goal" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Fundraising Goal (₹)*
@@ -354,7 +346,6 @@ export default function CreateCampaignPage() {
                   )}
                 </div>
                 
-                {/* Start Date */}
                 <div>
                   <label htmlFor="startDate" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Start Date*
@@ -379,7 +370,6 @@ export default function CreateCampaignPage() {
                   )}
                 </div>
                 
-                {/* End Date */}
                 <div>
                   <label htmlFor="endDate" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     End Date*
@@ -404,7 +394,6 @@ export default function CreateCampaignPage() {
                   )}
                 </div>
                 
-                {/* Target Audience */}
                 <div className="col-span-1 md:col-span-2">
                   <label htmlFor="targetAudience" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Target Audience <span className="text-gray-400">(Optional)</span>
@@ -420,7 +409,6 @@ export default function CreateCampaignPage() {
                   />
                 </div>
                 
-                {/* Description */}
                 <div className="col-span-1 md:col-span-2">
                   <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Campaign Description*
@@ -454,7 +442,6 @@ export default function CreateCampaignPage() {
             </div>
           )}
           
-          {/* Campaign Details Section */}
           {activeSection === "details" && (
             <div className="max-w-3xl mx-auto space-y-6 animate-fadeIn">
               <div className="bg-purple-50 dark:bg-purple-900/10 rounded-lg p-4 text-sm text-purple-800 dark:text-purple-300 flex items-start">
@@ -462,7 +449,6 @@ export default function CreateCampaignPage() {
                 <p>Add visual content and additional details to make your campaign more appealing to potential donors.</p>
               </div>
               
-              {/* Campaign Image */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Campaign Image
@@ -517,7 +503,6 @@ export default function CreateCampaignPage() {
                 </div>
               </div>
               
-              {/* Additional Notes */}
               <div>
                 <label htmlFor="notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Additional Notes <span className="text-gray-400">(Optional)</span>
@@ -552,7 +537,6 @@ export default function CreateCampaignPage() {
             </div>
           )}
           
-          {/* Campaign Settings Section */}
           {activeSection === "settings" && (
             <div className="max-w-3xl mx-auto space-y-6 animate-fadeIn">
               <div className="bg-amber-50 dark:bg-amber-900/10 rounded-lg p-4 text-sm text-amber-800 dark:text-amber-300 flex items-start">
@@ -561,7 +545,6 @@ export default function CreateCampaignPage() {
               </div>
               
               <div className="space-y-4">
-                {/* Recurring Donations */}
                 <div className="flex items-start bg-white/5 p-4 rounded-lg">
                   <div className="flex h-5 items-center">
                     <input
@@ -583,7 +566,6 @@ export default function CreateCampaignPage() {
                   </div>
                 </div>
                 
-                {/* Email Reminders */}
                 <div className="flex items-start bg-white/5 p-4 rounded-lg">
                   <div className="flex h-5 items-center">
                     <input
@@ -605,7 +587,6 @@ export default function CreateCampaignPage() {
                   </div>
                 </div>
                 
-                {/* Progress Bar */}
                 <div className="flex items-start bg-white/5 p-4 rounded-lg">
                   <div className="flex h-5 items-center">
                     <input
@@ -627,7 +608,6 @@ export default function CreateCampaignPage() {
                   </div>
                 </div>
                 
-                {/* Thank You Messages */}
                 <div className="flex items-start bg-white/5 p-4 rounded-lg">
                   <div className="flex h-5 items-center">
                     <input
@@ -650,7 +630,6 @@ export default function CreateCampaignPage() {
                 </div>
               </div>
               
-              {/* Summary Card */}
               <div className="bg-white/10 backdrop-blur-md rounded-lg border border-white/20 overflow-hidden">
                 <div className="bg-gradient-to-r from-emerald-500/10 to-blue-500/10 px-4 py-3 border-b border-white/10">
                   <h3 className="text-sm font-medium text-gray-800 dark:text-white">Campaign Summary</h3>
@@ -714,12 +693,7 @@ export default function CreateCampaignPage() {
                       : 'hover:from-emerald-600 hover:to-green-600'
                   } transition-all duration-300`}
                 >
-                  {isSubmitting ? (
-                    <>
-                      <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                      Creating Campaign...
-                    </>
-                  ) : (
+                  {isSubmitting ? <Loading /> : (
                     <>
                       <Save className="h-4 w-4 mr-2" />
                       Create Campaign
@@ -732,7 +706,6 @@ export default function CreateCampaignPage() {
         </form>
       </div>
       
-      {/* Tips Section */}
       <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20 shadow-xl">
         <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4 flex items-center">
           <AlertCircle className="h-5 w-5 mr-2 text-emerald-500" />

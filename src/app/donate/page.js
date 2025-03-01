@@ -91,7 +91,6 @@ export default function DonateForm({ session }) {
             body: JSON.stringify(paymentData),
           });
 
-          setLoading(true)
           const saveData = await saveResponse.json();
           if (!saveResponse.ok) throw new Error(saveData.error || "Failed to save donation");
 
@@ -110,7 +109,7 @@ export default function DonateForm({ session }) {
       console.error("Error initiating payment:", error);
       alert(`Payment initiation failed: ${error.message}`);
     } finally {
-      setLoading(false);
+      setLoading(true);
     }
   };
 
